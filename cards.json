@@ -1,0 +1,69 @@
+{
+    "cards" : [
+        {
+            "number": 1,
+            "name": "Ace",
+            "image": "./img/1.png"
+        },
+        {
+            "number": 2,
+            "name": "Two",
+            "image": "./img/2.png"
+        },
+        {
+            "number": 3,
+            "name": "Three",
+            "image": "./img/3.png"
+        },
+        {
+            "number": 4,
+            "name": "Four",
+            "image": "./img/4.png"
+        },
+        {
+            "number": 5,
+            "name": "Five",
+            "image": "./img/5.png"
+        },
+        {
+            "number": 6,
+            "name": "Six",
+            "image": "./img/6.png"
+        },
+        {
+            "number": 7,
+            "name": "Seven",
+            "image": "./img/7.png"
+        },
+        {
+            "number": 8,
+            "name": "Eight",
+            "image": "./img/8.png"
+        },
+        {
+            "number": 9,
+            "name": "Nine",
+            "image": "./img/9.png"
+        },
+        {
+            "number": 10,
+            "name": "Ten",
+            "image": "./img/10.png"
+        },
+        {
+            "number": 11,
+            "name": "Valet",
+            "image": "./img/11.png"
+        },
+        {
+            "number": 12,
+            "name": "Queen",
+            "image": "./img/12.png"
+        },
+        {
+            "number": 13,
+            "name": "King",
+            "image": "./img/13.png"
+        }
+    ]
+}
