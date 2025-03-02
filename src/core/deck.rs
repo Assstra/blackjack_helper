@@ -1,5 +1,4 @@
 use super::cards::{Card, Suit, Value};
-use strum::IntoEnumIterator;
 use rand::thread_rng;
 use rand::seq::SliceRandom;
 
@@ -20,8 +19,12 @@ impl Deck {
         Self { cards }
     }
 
-    pub fn shuffle_deck(mut self) -> Self {
+    pub fn shuffle_deck(&mut self) -> &Self {
         self.cards.shuffle(&mut thread_rng());
         return self;
+    }
+
+    pub fn pick_card(&mut self) -> Card {
+        return self.cards.pop().expect("There is not enough cards in the deck left");
     }
 }

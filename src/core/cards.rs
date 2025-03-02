@@ -1,33 +1,56 @@
-use strum_macros::EnumIter;
 
-#[derive(EnumIter, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Suit {
-    heart,      // ♥️
-    diamonds,   // ♦️
-    clubs,      // ♣️
-    spades,     // ♠️
+    Heart,      // ♥️
+    Diamonds,   // ♦️
+    Clubs,      // ♣️
+    Spades,     // ♠️
 }
 
-#[derive(EnumIter)]
+impl Suit {
+    /// Create an iterator over suites
+    pub fn iter() -> impl Iterator<Item = Suit> {
+        [Suit::Heart, Suit::Diamonds, Suit::Clubs, Suit::Spades].iter().copied()
+    }   
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Value {
-    Two = 0,    // 2
-    Three = 1,  // 3
-    Four = 2,   // 4
-    Five = 3,   // 5
-    Six = 4,    // 6
-    Seven = 5,  // 7
-    Eight = 6,  // 8
-    Nine = 7,   // 9
-    Ten = 8,    // 10
-    Jack = 9,   // J
+    Two = 2,
+    Three = 3,
+    Four = 4,
+    Five = 5,
+    Six = 6,
+    Seven = 7,
+    Eight = 8,
+    Nine = 9,
+    Ten = 10,
+    Jack = 10,  // J
     Queen = 10, // Q
-    King = 11,  // K
-    Ace = 12,   // A
+    King = 10,  // K
+    Ace = 11,   // A (typically 1 or 11 in Blackjack)
 }
 
+impl Value {
+
+    /// Create an iterator over values
+    pub fn iter() -> impl Iterator<Item = Value> {
+        [
+            Value::Two, Value::Three, Value::Four, Value::Five, Value::Six, Value::Seven, 
+            Value::Eight, Value::Nine, Value::Ten, Value::Jack, Value::Queen, Value::King, Value::Ace
+        ].iter().copied()
+    }   
+
+    /// Convert `Value` to `u8` so we can sum it
+    pub fn to_u8(self) -> u8 {
+        self as u8
+    }
+}
+
+#[derive(Clone)]
 pub struct Card {
-    suit: Suit,
-    value: Value,
+    pub suit: Suit,
+    pub value: Value,
 }
 
 impl Card {
