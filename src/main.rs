@@ -85,21 +85,32 @@ fn main() -> Result<()> {
         }
     }
 
-    // 6. Show the cards
-    stdout().execute(EnterAlternateScreen)?;
-    enable_raw_mode()?;
-    let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
-    terminal.clear()?;
-    loop {
-        // TODO draw the UI
-        // TODO handle events
+    // Dealer's turn
+    println!("🤵 Dealer's turn begins!\n");
+    dealer.play_hand(&mut deck, 0, 0);
+
+    println!("\n========== 🏆 Results 🏆 ==========\n");
+
+    // Final results
+    let dealer_score = dealer.calculate_score(0);
+
+    for (i, player) in players.iter_mut().enumerate() {
+        for(hand_index, _hand ) in player.hand.iter().enumerate() {
+            let player_score = player.calculate_score(hand_index);
+            print!("👤 Player {} (Score: {}) vs Dealer (Score: {}) → ", i + 1, player_score, dealer_score);
+            if player_score > 21 {
+                println!("💀 Bust! Dealer wins.");
+            } else if dealer_score > 21 || player_score > dealer_score {
+                println!("🎉 Player {} wins!", i + 1);
+            } else {
+                println!("🏆 Dealer wins!");
+            }
+        }
     }
-    disable_raw_mode()?;
+
+    println!("\n=====================================");
+    println!("🎰 Thanks for playing Blackjack! 🎰");
+    println!("=====================================\n");
+
     Ok(())
-    // 7. Ask the player to hit or stand
-    // 8. If hit, deal another card
-    // 9. If stand, dealer deals cards until 17 or higher
-    // 10. If player busts, dealer wins
-    // 11. If dealer busts, player wins
-    // 12. If player has higher value, player wins
 }
