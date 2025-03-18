@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Suit {
@@ -16,38 +18,60 @@ impl Suit {
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Value {
-    Two = 2,
-    Three = 3,
-    Four = 4,
-    Five = 5,
-    Six = 6,
-    Seven = 7,
-    Eight = 8,
-    Nine = 9,
-    Ten = 10,
-    Jack = 10,  // J
-    Queen = 10, // Q
-    King = 10,  // K
-    Ace = 11,   // A (typically 1 or 11 in Blackjack)
+    Two,
+    Three,
+    Four,
+    Five,
+    Six,
+    Seven,
+    Eight,
+    Nine,
+    Ten,
+    Jack,  // J
+    Queen, // Q
+    King,  // K
+    AceH,  // A 11
+    AceL,  // A 1
 }
 
 impl Value {
 
+    pub fn numeric_value(&self) -> u8 {
+        match self {
+            Value::Two => 2,
+            Value::Three => 3,
+            Value::Four => 4,
+            Value::Five => 5,
+            Value::Six => 6,
+            Value::Seven => 7,
+            Value::Eight => 8,
+            Value::Nine => 9,
+            Value::Ten => 10,
+            Value::Jack => 10,
+            Value::Queen => 10,
+            Value::King => 10,
+            Value::AceH => 11,
+            Value::AceL => 1,
+        }
+    }
+    
     /// Create an iterator over values
     pub fn iter() -> impl Iterator<Item = Value> {
         [
             Value::Two, Value::Three, Value::Four, Value::Five, Value::Six, Value::Seven, 
-            Value::Eight, Value::Nine, Value::Ten, Value::Jack, Value::Queen, Value::King, Value::Ace
+            Value::Eight, Value::Nine, Value::Ten, Value::Jack, Value::Queen, Value::King, Value::AceH
         ].iter().copied()
     }   
 
-    /// Convert `Value` to `u8` so we can sum it
-    pub fn to_u8(self) -> u8 {
-        self as u8
+}
+
+impl Display for Card {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?} of {:?}", self.value, self.suit)
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Card {
     pub suit: Suit,
     pub value: Value,
