@@ -38,11 +38,14 @@ impl Participant for Player {
             if score >= 21 {
                 if score == 21 {
                     println!("🃏 Player {} BLACKJACK.", player_id);
-                } else if self.hand[hand_index].iter().any(|card| card.value == Value::AceH) {
-                    println!("🃏 Player {} has busted, adjusting Ace value to 1.", player_id);
-                    self.hand[hand_index][index].value == Value::AceL
+                    break
                 }
-                break // Stop loop if score is 21 or more
+                if let Some((index, _)) = self.hand[hand_index].iter().enumerate().find(|(_, card)| card.value == Value::AceH) {
+                    println!("🃏 Player {} has busted, adjusting Ace value to 1.", player_id);
+                    self.hand[hand_index][index].value = Value::AceL
+                } else {
+                    break // Not ace to "convert"
+                }
             } else {
                 let input = cli::hit_or_stand_input();
     
@@ -50,7 +53,7 @@ impl Participant for Player {
                     let card = self.draw_card(deck, hand_index);
                     println!("🃏 Player {} hits and draws a {}.", player_id, card);
                 } else {
-                    break
+                    break // Player stands
                 }
             }
         }
