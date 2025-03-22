@@ -1,9 +1,9 @@
-use std::fmt::Display;
+use std::fmt::{Display, Formatter};
 
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Suit {
-    Heart,      // ♥️
+    Hearts,      // ♥️
     Diamonds,   // ♦️
     Clubs,      // ♣️
     Spades,     // ♠️
@@ -12,8 +12,19 @@ pub enum Suit {
 impl Suit {
     /// Create an iterator over suites
     pub fn iter() -> impl Iterator<Item = Suit> {
-        [Suit::Heart, Suit::Diamonds, Suit::Clubs, Suit::Spades].iter().copied()
+        [Suit::Hearts, Suit::Diamonds, Suit::Clubs, Suit::Spades].iter().copied()
     }   
+}
+
+impl Display for Suit {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            Suit::Diamonds =>  "♦️",
+            Suit::Clubs => "♣️",
+            Suit::Hearts => "♥️",
+            Suit::Spades => "♠️"
+        })
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -65,6 +76,26 @@ impl Value {
 
 }
 
+impl Display for Value {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            Value::Two => "2",
+            Value::Three => "3",
+            Value::Four => "4",
+            Value::Five => "5",
+            Value::Six => "6",
+            Value::Seven => "7",
+            Value::Eight => "8",
+            Value::Nine => "9",
+            Value::Ten => "10",
+            Value::Jack => "J",
+            Value::Queen => "Q",
+            Value::King => "K",
+            Value::AceH | Value::AceL => "A",
+        })
+    }
+}
+
 impl Display for Card {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?} of {:?}", self.value, self.suit)
@@ -75,13 +106,15 @@ impl Display for Card {
 pub struct Card {
     pub suit: Suit,
     pub value: Value,
+    pub is_shown: bool,
 }
 
 impl Card {
-    pub fn new(suit: Suit, value: Value) -> Self {
+    pub fn new(suit: Suit, value: Value, is_shown: bool) -> Self {
         Card {
             suit,
             value,
+            is_shown,
         }
     }
 }

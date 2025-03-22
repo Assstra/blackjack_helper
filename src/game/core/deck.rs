@@ -2,6 +2,7 @@ use super::cards::{Card, Suit, Value};
 use rand::thread_rng;
 use rand::seq::SliceRandom;
 
+#[derive(Debug)]
 pub struct Deck {
     cards: Vec<Card>,
 }
@@ -12,7 +13,7 @@ impl Deck {
         for _ in 1..num_deck {
             for s in Suit::iter() {
                 for v in Value::iter() {
-                    cards.push(Card::new(s, v));
+                    cards.push(Card::new(s, v, false));
                 }
             }
         }

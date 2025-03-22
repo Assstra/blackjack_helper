@@ -1,116 +1,123 @@
-use crate::player::Player;
-use core::deck::Deck;
-use crossterm::{
-    event::{self, KeyCode, KeyEventKind},
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-    ExecutableCommand,
+use cli_log::*;
+use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
+use game::{
+    blackjack::{Game, GameState},
+    player_actions::PlayerAction,
 };
-use player::{Dealer, Participant};
-use ratatui::{
-    prelude::{CrosstermBackend, Stylize, Terminal},
-    widgets::Paragraph,
-};
-use std::io::Result;
+use ratatui::DefaultTerminal;
+use std::io::{self, Error};
 
-mod cli;
-mod core;
-mod player;
+use ui::ui::ui;
 
-const DEFAULT_BLACKJACK_DECK_NUMBER: u8 = 8;
+mod game;
+mod ui;
 
-fn main() -> Result<()> {
-    println!("=====================================");
-    println!("🎰 Welcome to Blackjack! 🎰");
-    println!("=====================================");
+#[derive(Debug)]
+pub struct App {
+    pub game: Game,
+    pub menu_selected_value: usize,
+    pub show_debug: bool,
+    pub exit: bool,
+}
 
-    let nb_players = cli::input_cli();
-    println!("🔢 Number of players: {}", nb_players);
-
-    // Create players
-    let mut players: Vec<Player> = Vec::new();
-    for i in 1..=nb_players {
-        let player = Player::new();
-        println!("👤 Player {} has joined the game!", i);
-        players.push(player);
-    }
-    let mut dealer = Dealer::new();
-    println!("🤵 The dealer is ready.");
-
-    // Create deck
-    let mut deck = Deck::new(DEFAULT_BLACKJACK_DECK_NUMBER);
-    println!("🃏 Initializing deck with {} decks...", DEFAULT_BLACKJACK_DECK_NUMBER);
-    deck.shuffle_deck();
-    println!("🔀 Deck shuffled!\n");
-
-    // Draw cards
-    println!("🎴 Dealing initial cards...\n");
-    for _ in 0..2 {
-        for (i, player) in players.iter_mut().enumerate() {
-            player.draw_card(&mut deck, 0);
-            println!("🃏 Player {} drew a card.", i + 1);
+impl App {
+    fn new() -> Self {
+        Self {
+            game: Game::new(),
+            menu_selected_value: 0,
+            show_debug: false,
+            exit: false,
         }
-        dealer.draw_card(&mut deck, 0);
-        println!("🤵 Dealer drew a card.\n");
     }
 
-    // Game loop
-    println!("========== 🃏 Game Starting! 🃏 ==========\n");
+    /// runs the application's main loop until the user quits
+    pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
+        // Initialize the game
+        self.game.init_game(2);
 
-    // Players' turns
-    for (i, player) in players.iter_mut().enumerate() {
-        let player_id = i + 1;
-        println!("➡️ Player {}'s turn: {:?}", player_id, player.hand);
+        self.game.init_turn();
 
-        if player.can_split() {
-            let input = cli::hit_or_stand_input();
-    
-            if input == "split" {
+        while !self.exit && self.game.game_state != GameState::EndGame {
+            terminal.draw(|frame| ui(frame, &self))?;
+            self.handle_events()?;
+        }
+        Ok(())
+    }
 
-                // Split the initial cards & Create the second hand (index 1) after the split
-                let second_card = player.hand[0].remove(1).clone();
-                player.hand.push(vec![second_card]);
+    fn handle_events(&mut self) -> io::Result<()> {
+        if event::poll(std::time::Duration::from_millis(250))? {
+            match event::read()? {
+                // it's important to check that the event is a key press event as
+                // crossterm also emits key release and repeat events on Windows.
+                Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
+                    self.handle_key_event(key_event)
+                }
+                _ => {}
+            };
+        }
+        Ok(())
+    }
 
-                // Play 1st split
-                println!("🃏 Player {} splits: split 1", player_id);
-                player.draw_card(&mut deck, 0);
-                player.play_hand(&mut deck, 0, player_id);
-
-                // Play 2nd split
-                println!("🃏 Player {} splits: split 2", player_id);
-                player.draw_card(&mut deck, 1);
-                player.play_hand(&mut deck, 1, player_id);
+    fn handle_key_event(&mut self, key_event: KeyEvent) {
+        match key_event.code {
+            KeyCode::Char('q') => self.exit(),
+            KeyCode::Up => {
+                if self.game.input_wanted {
+                    if let GameState::PlayerTurn(_, _) = self.game.game_state {
+                        let actions = self.game.available_actions.get_actions();
+                        self.menu_selected_value =
+                            (self.menu_selected_value.wrapping_sub(1)) % actions.len();
+                    }
+                }
             }
-        } else {
-            player.play_hand(&mut deck, 0, player_id);
-        }
-    }
-
-    // Dealer's turn
-    println!("🤵 Dealer's turn begins!\n");
-    dealer.play_hand(&mut deck, 0, 0);
-
-    println!("\n========== 🏆 Results 🏆 ==========\n");
-
-    // Final results
-    let dealer_score = dealer.calculate_score(0);
-
-    for (i, player) in players.iter_mut().enumerate() {
-        for(hand_index, _hand ) in player.hand.iter().enumerate() {
-            let player_score = player.calculate_score(hand_index);
-            print!("👤 Player {} (Score: {}) vs Dealer (Score: {}) → ", i + 1, player_score, dealer_score);
-            if player_score > 21 {
-                println!("💀 Bust! Dealer wins.");
-            } else if dealer_score > 21 || player_score > dealer_score {
-                println!("🎉 Player {} wins!", i + 1);
-            } else {
-                println!("🏆 Dealer wins!");
+            KeyCode::Down => {
+                if self.game.input_wanted {
+                    if let GameState::PlayerTurn(_, _) = self.game.game_state {
+                        let actions = self.game.available_actions.get_actions();
+                        self.menu_selected_value = (self.menu_selected_value + 1) % actions.len();
+                    }
+                }
             }
+            KeyCode::Enter => {
+                if matches!(self.game.game_state, GameState::PlayerTurn(_, _))
+                    && self.game.input_wanted
+                {
+                    // if casting is possible
+                    if let GameState::PlayerTurn(player_id, hand_id) = self.game.game_state {
+                        // Disable input
+                        self.game.input_wanted = false;
+                        let menu_selected_index = self.menu_selected_value;
+                        self.game.player_action_selected = self.game.available_actions.get_actions()[menu_selected_index].clone();
+
+                        match self.game.player_action_selected {
+                            PlayerAction::Hit => {
+                                self.game.hit(player_id, hand_id);
+                            }
+                            PlayerAction::Stand => {
+                                self.game.stand(player_id, hand_id);
+                            }
+                            PlayerAction::Split => {
+                                self.game.split(player_id, hand_id)
+                            }
+                            PlayerAction::None => {}
+                        }
+                    }
+                }
+            }
+            _ => {}
         }
     }
 
-    println!("\n=====================================");
-    println!("🎰 Thanks for playing Blackjack! 🎰");
-    println!("=====================================\n");
+    fn exit(&mut self) {
+        self.exit = true;
+    }
+}
 
-    Ok(())
+fn main() -> Result<(), Error> {
+    init_cli_log!();
+    debug!("test");
+    let mut terminal = ratatui::init();
+    let result = App::new().run(&mut terminal);
+    ratatui::restore();
+    result
 }
