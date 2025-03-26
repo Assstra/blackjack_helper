@@ -8,11 +8,11 @@ use crate::{game::blackjack::{Game, GameState}, PlayerAction};
 pub fn player_menu(game: &Game, frame: &mut Frame, selected: usize) {
     let actions = game.available_actions.get_actions();
 
-    if let GameState::PlayerTurn(player_id, _) = game.game_state {
+    if let GameState::PlayerTurn(player_id, hand_id) = game.game_state {
         // Create a block for the menu
         let menu_block = Block::default()
             .borders(Borders::ALL)
-            .title(format!("Player {} - Choose an action", player_id))
+            .title(format!("Player {} | {} - Choose an action", player_id + 1, hand_id + 1))
             .style(Style::default().fg(Color::White));
 
         // Dynamically create paragraphs for the menu options
