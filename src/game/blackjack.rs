@@ -66,7 +66,22 @@ impl Game {
         }
 
         self.game_state = GameState::PlayerTurn(0, 0);
-        self.player_turn(0, 0);
+        self.init_player(0, 0);
+    }
+
+    pub fn init_player(&mut self, player_id: usize, hand_id: usize) {
+        let player = &mut self.players[player_id];
+
+        if player.can_split() {
+            let mut actions = Vec::new();
+            actions.push(PlayerAction::Split);
+            actions.push(PlayerAction::None);
+
+            self.available_actions.set_player_actions(actions);
+            self.input_wanted = true;
+        } else {
+            self.player_turn(player_id, hand_id);
+        }
     }
 
     pub fn player_turn(&mut self, player_id: usize, hand_id: usize) {
@@ -74,9 +89,19 @@ impl Game {
 
         let player = &mut self.players[player_id];
         let hand = &mut player.hands[hand_id];
+        let score = hand.calculate_score();
 
-        if hand.calculate_score() >= 21 {
-            self.stand(player_id, hand_id);
+        if score >= 21 {
+            if score > 21 {
+                if let Some(card) = hand.cards.iter_mut().find(|card| card.value == Value::AceH) {
+                    card.value = Value::AceL;
+                    self.player_turn(player_id, hand_id);
+                } else {
+                    self.stand(player_id, hand_id);
+                }
+            } else {
+                self.stand(player_id, hand_id);
+            }
         } else {
             let mut actions = Vec::new();
             actions.push(PlayerAction::Hit);
@@ -103,10 +128,10 @@ impl Game {
             // Same player, next hand
             self.game_state = GameState::PlayerTurn(player_id, hand_id + 1);
             self.player_turn(player_id, hand_id + 1);
-        } else if player_id +1 < self.players.len() {
-            // Next player, first hand
+        } else if player_id + 1 < self.players.len() {
+            // Next player (check can_split), first hand
             self.game_state = GameState::PlayerTurn(player_id + 1, 0);
-            self.player_turn(player_id + 1, 0);
+            self.init_player(player_id + 1, 0);
         } else {
             self.game_state = GameState::DealerTurn;
             self.dealer_turn();
