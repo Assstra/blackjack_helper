@@ -99,7 +99,9 @@ impl App {
                             PlayerAction::Split => {
                                 self.game.split(player_id, hand_id)
                             }
-                            PlayerAction::None => {}
+                            PlayerAction::None => {
+                                self.game.player_turn(player_id, 0)
+                            }
                         }
                     }
                 }
